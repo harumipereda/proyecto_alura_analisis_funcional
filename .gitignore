@@ -1,0 +1,4 @@
+challenge/
+.env
+__pycache__/
+*.pyc
