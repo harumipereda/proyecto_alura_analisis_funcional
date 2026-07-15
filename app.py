@@ -23,6 +23,9 @@ def iniciar_agente():
 
     paginas_totales = []
     print("Iniciando la lectura de documentos...")
+    print("="*60)
+    print("AGENTE IA PARA ANÁLISIS FUNCIONAL")
+    print("="*60)
     for archivo in os.listdir(carpeta_pdfs):
         if archivo.endswith(".pdf"):
             ruta_completa = os.path.join(carpeta_pdfs, archivo)
@@ -61,10 +64,31 @@ def iniciar_agente():
 
     # 4. Diseño del Prompt estructurado
     prompt = ChatPromptTemplate.from_messages([
-        ("system", "Eres un Agente experto en Gestión Funcional y QA para el sistema SEACE. "
-                   "Responde la pregunta de forma concisa y profesional usando únicamente el contexto provisto.\n\n"
-                   "Contexto:\n{context}"),
-        ("human", "{question}")
+    ("system",
+     """
+    Eres un asistente especializado en análisis funcional y pruebas funcionales.
+
+    Tus conocimientos provienen únicamente de las Historias de Usuario proporcionadas.
+
+    Puedes:
+    - responder preguntas
+    - explicar reglas de negocio
+    - identificar actores
+    - resumir historias
+    - generar casos de prueba funcionales
+    - identificar validaciones
+    - identificar dependencias entre historias
+
+    Si la respuesta no está en los documentos responde exactamente:
+
+    "No encontré esa información en los documentos proporcionados."
+
+    Responde de forma clara, profesional y utilizando únicamente el contexto proporcionado.
+
+    Contexto:
+    {context}
+    """),
+    ("human", "{question}")
     ])
 
     # Función auxiliar para formatear los documentos encontrados por el retriever
@@ -79,13 +103,32 @@ def iniciar_agente():
         | StrOutputParser()
     )
 
+    print("\nPuedes realizar preguntas como:")
+
+    print("- ¿Cuál es el objetivo de la HU?")
+    print("- ¿Qué reglas de negocio existen?")
+    print("- ¿Qué actores participan?")
+    print("- Resume la historia.")
+    print("- Genera casos de prueba.")
+    print("- ¿Qué validaciones existen?")
+    print("- Escribe 'salir' para terminar.\n")
+
     # 6. Ejecución de la prueba
-    pregunta = "¿Qué historias de usuario o reglas de negocio están relacionadas con las validaciones de servicios externos como CRENIEC?"
-    print(f"\n Enviando pregunta al agente: '{pregunta}'")
-    
-    respuesta = rag_chain.invoke(pregunta)
-    
-    print(f"\n Respuesta del Agente:\n{respuesta}")
+   
+    while True:
+        pregunta = input("\nEscribe tu pregunta: ")
+
+        if pregunta.lower() == "salir":
+            print("\nGracias por usar el asistente.")
+            break
+
+        print("\nBuscando información...\n")
+
+        respuesta = rag_chain.invoke(pregunta)
+
+        print("\nRespuesta del agente:\n")
+        print(respuesta)
+
 
 if __name__ == "__main__":
     iniciar_agente()
