@@ -2,3 +2,9 @@ challenge/
 .env
 __pycache__/
 *.pyc
+
+# Índice generado localmente
+vector_db/
+
+# Documentos fuente
+PDF/

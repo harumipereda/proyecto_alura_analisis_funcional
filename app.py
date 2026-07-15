@@ -1,133 +1,198 @@
 import os
 from dotenv import load_dotenv
 
-# Módulos estables de LangChain
-from langchain_community.document_loaders import PyPDFLoader
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
 
-# Cargar la API Key desde el archivo .env
+
 load_dotenv()
 
 
 def iniciar_agente():
-    carpeta_pdfs = "PDF"
-    
-    if not os.path.exists(carpeta_pdfs):
-        print(f"Error: La carpeta '{carpeta_pdfs}' no existe.")
-        return
 
-    paginas_totales = []
-    print("Iniciando la lectura de documentos...")
-    print("="*60)
-    print("AGENTE IA PARA ANÁLISIS FUNCIONAL")
-    print("="*60)
-    for archivo in os.listdir(carpeta_pdfs):
-        if archivo.endswith(".pdf"):
-            ruta_completa = os.path.join(carpeta_pdfs, archivo)
-            print(f" Cargando: {archivo}")
-            loader = PyPDFLoader(ruta_completa)
-            paginas_totales.extend(loader.load())
+    print("\n====================================")
+    print(" AGENTE IA DE ANÁLISIS FUNCIONAL")
+    print("====================================")
 
-    print(f"\n¡Éxito! Se cargaron {len(paginas_totales)} páginas.")
 
-    if len(paginas_totales) == 0:
-        print("No se encontraron archivos PDF para procesar.")
-        return
+    # =====================================================
+    # 1. Cargar base vectorial creada previamente
+    # =====================================================
 
-    # 1. Fragmentación del texto
-    text_splitter = RecursiveCharacterTextSplitter(
-    chunk_size=2000,
-    chunk_overlap=100)
-    fragmentos = text_splitter.split_documents(paginas_totales)
-    print(f"Páginas cargadas: {len(paginas_totales)}")
-    print(f"Fragmentos generados: {len(fragmentos)}")
+    print("\nCargando base de conocimientos...")
 
-    # 2. Creación del almacén de vectores (FAISS)
-    print("Indexando documentos en la base de datos vectorial...")
-    embeddings = GoogleGenerativeAIEmbeddings(
-    model="models/gemini-embedding-001",
-    google_api_key=os.getenv("GOOGLE_API_KEY")
+
+    embeddings = HuggingFaceEmbeddings(
+        model_name="sentence-transformers/all-MiniLM-L6-v2"
     )
-    vector_store = FAISS.from_documents(fragmentos, embeddings)
-    retriever = vector_store.as_retriever(search_kwargs={"k": 5})
 
-    # 3. Configuración del modelo Gemini
+
+    vector_store = FAISS.load_local(
+        "vector_db",
+        embeddings,
+        allow_dangerous_deserialization=True
+    )
+
+
+    retriever = vector_store.as_retriever(
+        search_kwargs={"k": 5}
+    )
+
+
+    print("Base de conocimientos cargada correctamente.")
+
+
+
+    # =====================================================
+    # 2. Configurar modelo generativo Gemini
+    # =====================================================
+
     llm = ChatGoogleGenerativeAI(
-    model="models/gemini-3.5-flash",
-    temperature=0.2,
-    google_api_key=os.getenv("GOOGLE_API_KEY"))
+        model="models/gemini-3.5-flash",
+        temperature=0.2,
+        google_api_key=os.getenv("GOOGLE_API_KEY")
+    )
 
-    # 4. Diseño del Prompt estructurado
-    prompt = ChatPromptTemplate.from_messages([
-    ("system",
-     """
-    Eres un asistente especializado en análisis funcional y pruebas funcionales.
 
-    Tus conocimientos provienen únicamente de las Historias de Usuario proporcionadas.
 
-    Puedes:
-    - responder preguntas
-    - explicar reglas de negocio
-    - identificar actores
-    - resumir historias
-    - generar casos de prueba funcionales
-    - identificar validaciones
-    - identificar dependencias entre historias
+    # =====================================================
+    # 3. Prompt del agente
+    # =====================================================
 
-    Si la respuesta no está en los documentos responde exactamente:
+    prompt = ChatPromptTemplate.from_messages(
+        [
+            (
+                "system",
+                """
+                Eres un asistente experto en análisis funcional
+                y pruebas funcionales de software.
 
-    "No encontré esa información en los documentos proporcionados."
+                Tu conocimiento proviene únicamente de las
+                Historias de Usuario cargadas.
 
-    Responde de forma clara, profesional y utilizando únicamente el contexto proporcionado.
+                Puedes:
 
-    Contexto:
-    {context}
-    """),
-    ("human", "{question}")
-    ])
+                - Explicar objetivos de Historias de Usuario.
+                - Identificar reglas de negocio.
+                - Identificar actores.
+                - Explicar escenarios.
+                - Generar casos de prueba funcionales.
+                - Identificar validaciones.
+                - Relacionar Historias de Usuario.
 
-    # Función auxiliar para formatear los documentos encontrados por el retriever
+                Cuando compares Historias de Usuario:
+                - identifica similitudes.
+                - identifica diferencias.
+                - identifica dependencias.
+                - menciona las reglas de negocio relacionadas.
+
+                Cada documento corresponde a una Historia de Usuario.
+                Usa el nombre del documento cuando sea relevante.
+
+                Si no encuentras información responde:
+
+                "No encontré esa información en los documentos proporcionados."
+
+                Contexto:
+                {context}
+                """
+            ),
+
+            (
+                "human",
+                "{question}"
+            )
+        ]
+    )
+
+
+
+    # =====================================================
+    # 4. Formatear documentos recuperados
+    # =====================================================
+
     def formatear_docs(docs):
-        return "\n\n".join(doc.page_content for doc in docs)
 
-    # 5. Construcción de la cadena RAG usando LCEL (Sin chains obsoletas)
+        resultado = ""
+
+        for doc in docs:
+
+            hu = doc.metadata.get(
+                "HU",
+                "Documento sin nombre"
+            )
+
+            resultado += (
+                f"\n\nHistoria de Usuario: {hu}\n"
+                f"{doc.page_content}"
+            )
+
+        return resultado
+
+
+
+    # =====================================================
+    # 5. Construcción RAG
+    # =====================================================
+
     rag_chain = (
-        {"context": retriever | formatear_docs, "question": RunnablePassthrough()}
+
+        {
+            "context": retriever | formatear_docs,
+            "question": RunnablePassthrough()
+        }
+
         | prompt
         | llm
         | StrOutputParser()
+
     )
 
-    print("\nPuedes realizar preguntas como:")
 
-    print("- ¿Cuál es el objetivo de la HU?")
-    print("- ¿Qué reglas de negocio existen?")
-    print("- ¿Qué actores participan?")
-    print("- Resume la historia.")
-    print("- Genera casos de prueba.")
-    print("- ¿Qué validaciones existen?")
-    print("- Escribe 'salir' para terminar.\n")
 
-    # 6. Ejecución de la prueba
-   
+    print("""
+Puedes preguntar:
+
+- ¿Cuál es el objetivo de la HU EC001?
+- ¿Qué reglas de negocio tiene EC002?
+- ¿Qué HU tienen validaciones con CRENIEC?
+- Genera casos de prueba para esta historia.
+- ¿Qué actores participan?
+- ¿Qué historias están relacionadas?
+
+Escribe 'salir' para terminar.
+""")
+
+
+
+    # =====================================================
+    # 6. Interacción con usuario
+    # =====================================================
+
     while True:
-        pregunta = input("\nEscribe tu pregunta: ")
+
+        pregunta = input("\nPregunta: ")
+
 
         if pregunta.lower() == "salir":
-            print("\nGracias por usar el asistente.")
+
+            print("Cerrando agente...")
             break
+
 
         print("\nBuscando información...\n")
 
+
         respuesta = rag_chain.invoke(pregunta)
 
-        print("\nRespuesta del agente:\n")
+
+        print("Respuesta:")
         print(respuesta)
+
 
 
 if __name__ == "__main__":
