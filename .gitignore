@@ -8,3 +8,15 @@ vector_db/
 
 # Documentos fuente
 PDF/
+
+#Archivos de pruebas 
+app_antes_de_streamlit.py
+prueba_1.py
+test_langchain.py
+
+#Probando con OLLAMA
+app_OLLAMA.py
+requirements_ollama.txt
+
+# Entorno virtual
+env/
