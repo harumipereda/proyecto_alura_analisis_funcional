@@ -16,9 +16,13 @@ from langchain_core.output_parsers import StrOutputParser
 
 load_dotenv()
 
+# Si no está en el .env, intentamos buscarla en los Secrets de Streamlit
+if not os.getenv("GOOGLE_API_KEY") and "GOOGLE_API_KEY" in st.secrets:
+    os.environ["GOOGLE_API_KEY"] = st.secrets["GOOGLE_API_KEY"]
 
+# Validar que finalmente exista la clave en el sistema
 if not os.getenv("GOOGLE_API_KEY"):
-    st.error("❌ No se encontró GOOGLE_API_KEY en el archivo .env")
+    st.error("❌ No se configuró la variable GOOGLE_API_KEY. Verifica los Secrets en Streamlit o tu archivo .env local.")
     st.stop()
 
 
