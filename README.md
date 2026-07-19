@@ -123,7 +123,7 @@ Respuesta
 ## 📝 5. Ejemplos de preguntas que el agente puede responder.
     *¿Me podrías decir un resumen de la HU EC008?
     *Genera 3 casos de prueba de HU EC008.
-    *¿Quiénes son los actores de la HU EC008?.
+    *¿Quiénes son los actores de la HU EC008?
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ## 😊 6. Ejemplos de respuestas generadas por el agente.
     *La Historia de Usuario GESTION DE COMPRAS-HU-EC008-GC-Visualizar seguimiento de firma de candidatos a usuarios o usuarios tiene como objetivo principal permitir que el Gestor de Información de la Entidad (GIE) pueda monitorear el estado de las firmas de los candidatos a usuarios dentro de una solicitud.
@@ -152,12 +152,12 @@ Respuesta
 
 ### Pantalla principal
 
-(imagen)
+![Pantalla Principal](images/Caraprincipal.JPG)
 
 ### Consulta realizada
 
-(imagen)
+![Pantalla Principal](images/deployado_1.PNG)
 
 ### Respuesta del agente
 
-(imagen)
+![Pantalla Principal](images/Captura_2.PNG)
