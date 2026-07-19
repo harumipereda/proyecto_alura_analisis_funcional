@@ -1,5 +1,7 @@
 # 🤖 Proyecto Alura ONE:  Agente IA RAG para Análisis Funcional de Historias de Usuario 
 > **Solución RAG (Retrieval-Augmented Generation) Local** para la consulta automatizada de reglas de negocio, historias de usuario y diseño de casos de prueba sobre la plataforma SECAE.
+Link del video de evidencia: https://drive.google.com/file/d/1rY0gU5PzxinWRcqPlthmVxYiP4sfrzEc/view?usp=sharing
+Link del despliegue: https://harumichallenge.streamlit.app/
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ## 📄 1. Descripción General
 Este proyecto implementa un Agente de Inteligencia Artificial basado en la arquitectura Retrieval-Augmented Generation (RAG), diseñado para asistir en el análisis funcional de software mediante la consulta inteligente de Historias de Usuario (HU) almacenadas en formato PDF.
